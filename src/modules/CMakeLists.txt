@@ -1,2 +1,2 @@
 target_sources(${EXE_NAME} PRIVATE
-"BaseModule.cpp")
+"BaseModule.cpp" "BasicFileOpModule.cpp")

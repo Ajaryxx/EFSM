@@ -4,10 +4,10 @@
 bool App::OnInit()
 {
 	Application* app = new Application();
-	app->Show();
+	app->SetBackgroundColour(wxColour::wxColour(255, 255, 255));
 	app->SetClientSize(800, 600);
 
-
+	app->Show();
 	return true;
 }
 
