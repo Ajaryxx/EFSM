@@ -19,11 +19,12 @@ public:
 
 private:
 
-	
 	//for file operations
 	wxButton* m_CreateButton;
 	wxButton* m_DeleteButton;
 	wxButton* m_MoveButton;
 	wxButton* m_CopyButton;
+
+	void OnPressCreateFile(wxCommandEvent& evt);
 
 };
