@@ -5,7 +5,7 @@ VERSION 0.1.0
 LANGUAGES CXX)
 
 #global settings
-set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 #project vars
