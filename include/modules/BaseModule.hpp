@@ -18,8 +18,6 @@ protected:
 	void AddControl(wxControl* control, const wxSizerFlags& sizerFlags = wxSizerFlags());
 
 private:
-
-
 	wxString m_ModuleName;
 	wxStaticBoxSizer* m_StaticBoxSizer;
 	wxWindow* m_Window;

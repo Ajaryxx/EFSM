@@ -9,6 +9,7 @@ Application::Application() : wxFrame(nullptr, wxID_ANY, "EFSM")
 	m_FlexGridSizer = new wxFlexGridSizer(5, 5, 10, 10);
 	AddModule(std::make_shared<BasicFileOpModule>(this, m_MainPanel));
 
+
 	m_MainPanel->SetSizerAndFit(m_FlexGridSizer);
 	m_FlexGridSizer->SetSizeHints(this);
 	

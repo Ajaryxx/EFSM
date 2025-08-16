@@ -7,6 +7,11 @@ enum EButtonsID : uint8_t
 	EDELETE_BUTTON,
 	EMOVE_BUTTON,
 	ECOPY_BUTTON,
+
+	//Create File Opt Dia
+	ESHOW_DIR_DIA,
+	ECONFIRM,
+	ECANCEL
 };
 
 /*This class is for this following file operations
@@ -16,8 +21,11 @@ class BasicFileOpModule : public BaseModule
 public:
 	BasicFileOpModule(wxWindow* window, wxPanel* panel);
 	~BasicFileOpModule() = default;
-	void TestBtn(wxCommandEvent& evt);
+	void HandleCreateFile(wxCommandEvent& evt);
 
+	void BuildAllLayouts();
+
+	void BuildCreateFileLayout();
 private:
 
 	//for file operations
@@ -27,5 +35,7 @@ private:
 	wxButton* m_CopyButton;
 
 	void OnPressCreateFile(wxCommandEvent& evt);
+
+	class DialogOptBuilder* optDialogCreateFile;
 
 };

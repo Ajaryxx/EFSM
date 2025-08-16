@@ -29,14 +29,6 @@ public:
 	void AddStrechSpacer(const wxString& key);
 	void AddSpacer(const wxString& key, int size);
 
-	template<typename EventTag, typename Class, typename EventArg, typename EventHandler>
-	void BindControlEvent(const wxString& key, 
-		const EventTag& eventType,
-		void (Class::* method)(EventArg&),
-		EventHandler* handler,
-		int winid = wxID_ANY,
-		int lastId = wxID_ANY,
-		wxObject* userData = nullptr);
 
 	void RefreshLayout();
 private:
@@ -82,7 +74,6 @@ inline void DialogOptBuilder::AddSizer(const wxString& key, const wxString& size
 	{
 		assert(false && "key does not exists");
 	}
-	
 }
 
 template<typename T, typename ...Args>
@@ -122,13 +113,15 @@ inline void DialogOptBuilder::SetValue(const wxString& key, const VAL& value)
 		{
 			control->SetValue(value);
 		}
+		else
+		{
+			assert(false && "T is not a wxControl or it has no SetValue as member");
+		}
 	}
 	else
 	{
 		assert(false && "Key does not exists");
 	}
-
-
 }
 
 template<typename T, typename RET>
@@ -149,21 +142,5 @@ inline RET DialogOptBuilder::GetValue(const wxString& key) const
 		assert(false && "Key does not exists");
 	}
 
-
 	return RET();
-}
-
-template<typename EventTag, typename Class, typename EventArg, typename EventHandler>
-inline void DialogOptBuilder::BindControlEvent(const wxString& key, const EventTag& eventType, void(Class::* method)(EventArg&), EventHandler* handler, int winid, int lastId, wxObject* userData)
-{
-	auto it = m_um_Controls.find(key);
-
-	if (it != m_um_Controls.end())
-	{
-		it->second->Bind(eventType, method, handler, winid, lastId, userData);
-	}
-	else
-	{
-		assert(false && "Key does not exists");
-	}
 }
