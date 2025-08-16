@@ -16,6 +16,7 @@ class BasicFileOpModule : public BaseModule
 public:
 	BasicFileOpModule(wxWindow* window, wxPanel* panel);
 	~BasicFileOpModule() = default;
+	void TestBtn(wxCommandEvent& evt);
 
 private:
 

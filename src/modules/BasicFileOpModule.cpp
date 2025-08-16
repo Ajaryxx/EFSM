@@ -23,6 +23,11 @@ BasicFileOpModule::BasicFileOpModule(wxWindow* window, wxPanel* panel) : BaseMod
 	m_CreateButton->Bind(wxEVT_BUTTON, &BasicFileOpModule::OnPressCreateFile, this);
 }
 
+void BasicFileOpModule::TestBtn(wxCommandEvent& evt)
+{
+
+}
+
 void BasicFileOpModule::OnPressCreateFile(wxCommandEvent& evt)
 {
 
@@ -48,49 +53,7 @@ void BasicFileOpModule::OnPressCreateFile(wxCommandEvent& evt)
 	optDialog->AddStrechSpacer("base");
 
 	optDialog->RefreshLayout();
-	optDialog->ShowModal();
-
-	////Main
-	//wxDialog* dialog = new wxDialog(GetApplicationWindow(), wxID_ANY, "Create a file");
-	//wxPanel* mainPanel = new wxPanel(dialog);
-	//wxBoxSizer* mainSizer = new wxBoxSizer(wxVERTICAL);
-
-	////FilePath
-	//wxBoxSizer* filePathSizer = new wxBoxSizer(wxHORIZONTAL);
-	//wxStaticText* filePathText = new wxStaticText(mainPanel, wxID_ANY, "Filepath: ");
-	//wxTextCtrl* inputFilePath = new wxTextCtrl(mainPanel, wxID_ANY, wxEmptyString, wxDefaultPosition, wxSize(200, wxDefaultSize.y));
-	//wxButton* showFileDia = new wxButton(mainPanel, wxID_ANY, "Show File Dialog");
-
-	//filePathSizer->Add(filePathText, wxSizerFlags().CenterVertical());
-	//filePathSizer->Add(inputFilePath);
-	//filePathSizer->Add(showFileDia);
-
-	////File Name
-	//wxBoxSizer* fileNameSizer = new wxBoxSizer(wxHORIZONTAL);
-	//wxStaticText* fileNameText = new wxStaticText(mainPanel, wxID_ANY, "File Name: ");
-	//wxTextCtrl* inputFileName = new wxTextCtrl(mainPanel, wxID_ANY);
-
-	//fileNameSizer->Add(fileNameText);
-	//fileNameSizer->Add(inputFileName);
-
-	////Confirm Buttons
-	//wxBoxSizer* checkButtonsSizer = new wxBoxSizer(wxHORIZONTAL);
-	//wxButton* confirmButton = new wxButton(mainPanel, wxID_ANY, "confirm");
-	//wxButton* cancelButton = new wxButton(mainPanel, wxID_ANY, "cancel");
-	//
-	//checkButtonsSizer->Add(confirmButton);
-	//checkButtonsSizer->Add(cancelButton);
-
-	////Add to mainSizer
-	//
-	//mainSizer->AddStretchSpacer();
-	//mainSizer->Add(filePathSizer, wxSizerFlags().CentreHorizontal().Border(wxUP, 10));
-	//mainSizer->Add(fileNameSizer, wxSizerFlags().CentreHorizontal().Border(wxUP, 10));
-	//mainSizer->Add(checkButtonsSizer, wxSizerFlags().CentreHorizontal().Border(wxUP, 10));
-	//mainSizer->AddStretchSpacer();
-
-
-	//mainPanel->SetSizerAndFit(mainSizer);
 	
+	optDialog->ShowModal();
 
 }

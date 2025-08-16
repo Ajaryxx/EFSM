@@ -10,13 +10,28 @@ DialogOptBuilder::DialogOptBuilder(wxWindow* window, wxWindowID id, const wxStri
 
 void DialogOptBuilder::AddStrechSpacer(const wxString& key)
 {
-	if (m_um_Sizers.find(key) != m_um_Sizers.end())
+	auto it = m_um_Sizers.find(key);
+
+	if (it != m_um_Sizers.end())
 	{
-		m_um_Sizers.find(key)->second->AddStretchSpacer();
+		it->second->AddStretchSpacer();
 	}
 	else
 	{
 		assert(false, "key does not exists");
+	}
+}
+
+void DialogOptBuilder::AddSpacer(const wxString& key, int size)
+{
+	auto it = m_um_Sizers.find(key);
+	if (it != m_um_Sizers.end())
+	{
+		it->second->AddSpacer(size);
+	}
+	else
+	{
+		assert(false && "key does not exists");
 	}
 }
 
