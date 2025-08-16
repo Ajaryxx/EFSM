@@ -14,10 +14,6 @@ wxWindow* BaseModule::GetApplicationWindow() const
 {
 	return m_Window;
 }
-void BaseModule::AddControl(wxControl* control, const wxSizerFlags& sizerFlags)
-{
-	m_Sizer->Add(control, sizerFlags);
-}
 wxStaticBoxSizer* BaseModule::GetStaticBoxSizer() const
 {
 	assert(m_Sizer && "Please set a sizer for this Module");

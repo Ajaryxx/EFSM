@@ -37,6 +37,6 @@ void DialogOptBuilder::AddSpacer(const wxString& key, int size)
 
 void DialogOptBuilder::RefreshLayout()
 {
-	mainPanel->SetSizerAndFit(m_um_Sizers.find("base")->second);
+	mainPanel->SetSizerAndFit(m_um_Sizers["base"]);
 }
 

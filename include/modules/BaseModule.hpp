@@ -15,7 +15,8 @@ protected:
 	template<typename T, typename... Args>
 	void SetModuleSizer(Args&&... args);
 	
-	void AddControl(wxControl* control, const wxSizerFlags& sizerFlags = wxSizerFlags());
+	template<typename T, typename... ARGS>
+	void AddControl(const wxSizerFlags& sizerFlags, ARGS&&... args);
 
 private:
 	wxString m_ModuleName;
@@ -32,4 +33,12 @@ inline void BaseModule::SetModuleSizer(Args&& ...args)
 	static_assert(std::is_base_of<wxSizer, T>::value, "T must derrive from wxSizer");
 	m_Sizer = new T(std::forward<Args>(args)...);
 	m_StaticBoxSizer->Add(m_Sizer);
+}
+
+template<typename T, typename... ARGS>
+inline void BaseModule::AddControl(const wxSizerFlags& sizerFlags, ARGS&&... args)
+{
+	static_assert(std::is_base_of<wxControl, T>::value, "T must be a wxControl");
+
+	m_Sizer->Add(new T(std::forward<ARGS>(args)...), sizerFlags);
 }

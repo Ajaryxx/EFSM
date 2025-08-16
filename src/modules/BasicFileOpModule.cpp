@@ -7,23 +7,14 @@ namespace fs = std::filesystem;
 
 BasicFileOpModule::BasicFileOpModule(wxWindow* window, wxPanel* panel) : BaseModule(wxString("Basic File operations"), wxVERTICAL, window)
 {
-
 	SetModuleSizer<wxGridSizer>(2, 2, 4, 4);
 
+	AddControl<wxButton>(wxSizerFlags(), panel, ECREATE_BUTTON, "Create File");
+	AddControl<wxButton>(wxSizerFlags(), panel, EDELETE_BUTTON, "Delete File");
+	AddControl<wxButton>(wxSizerFlags(), panel, EMOVE_BUTTON, "Move File");
+	AddControl<wxButton>(wxSizerFlags(), panel, ECOPY_BUTTON, "Copy File");
+
 	BuildAllLayouts();
-
-
-	m_CreateButton = new wxButton(panel, ECREATE_BUTTON, "Create File");
-	m_DeleteButton = new wxButton(panel, EDELETE_BUTTON, "Delete File");
-	m_MoveButton = new wxButton(panel, EMOVE_BUTTON, "Move File");
-	m_CopyButton = new wxButton(panel, ECOPY_BUTTON, "Copy File");
-
-	AddControl(m_CreateButton);
-	AddControl(m_DeleteButton);
-	AddControl(m_MoveButton);
-	AddControl(m_CopyButton);
-
-	m_CreateButton->Bind(wxEVT_BUTTON, &BasicFileOpModule::OnPressCreateFile, this);
 }
 
 void BasicFileOpModule::HandleCreateFile(wxCommandEvent& evt)

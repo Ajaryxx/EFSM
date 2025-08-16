@@ -29,7 +29,7 @@ public:
 	void AddStrechSpacer(const wxString& key);
 	void AddSpacer(const wxString& key, int size);
 
-
+	//its not neccesery to call this function
 	void RefreshLayout();
 private:
 
@@ -135,6 +135,10 @@ inline RET DialogOptBuilder::GetValue(const wxString& key) const
 		if (auto control = dynamic_cast<T*>(it->second))
 		{
 			return control->GetValue();
+		}
+		else
+		{
+			assert(false && "T is not a wxControl or it has no GetValue as member");
 		}
 	}
 	else
