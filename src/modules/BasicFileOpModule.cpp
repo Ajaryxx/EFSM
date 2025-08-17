@@ -15,7 +15,7 @@ BasicFileOpModule::BasicFileOpModule(wxWindow* window, wxPanel* panel) : BaseMod
 	AddControl<wxButton>("copy_BTN", wxSizerFlags(), panel, ECOPY_BUTTON, "Copy File");
 
 	BindEvent("create_BTN", wxEVT_BUTTON, &BasicFileOpModule::OnPressCreateFile, this, ECREATE_BUTTON);
-	BindEvent("delete_BTN", wxEVT_BUTTON, &BasicFileOpModule::OnPressDelteteFile, this, EDELETE_BUTTON);
+	BindEvent("delete_BTN", wxEVT_BUTTON, &BasicFileOpModule::OnPressDelete, this, EDELETE_BUTTON);
 
 	BuildAllLayouts();
 }
@@ -26,9 +26,23 @@ void BasicFileOpModule::HandleCreateFile(wxCommandEvent& evt)
 	std::string fileName = optDialogCreateFile->GetControl<wxTextCtrl>("inputFileName")->GetValue();
 	if (fs::exists(filePath) && !fileName.empty())
 	{
-		std::ofstream file(fs::path(filePath) / fs::path(fileName));
+		fs::path newFilePath = fs::path(filePath) / fs::path(fileName);
+		if (fs::exists(newFilePath))
+		{
+			int result = wxMessageBox("There is another file with the same name. Do you want to override it?", "Info", wxICON_QUESTION | wxOK | wxCANCEL);
+			if (result == wxCANCEL)
+			{
+				return;
+			}
+			
+		}
+		
+		std::ofstream file(newFilePath.u8string());
 
 		file.close();
+
+		wxMessageBox("File created succesfuly :)", "Info", wxICON_INFORMATION);
+
 		optDialogCreateFile->Close();
 	}
 	else
@@ -59,7 +73,9 @@ void BasicFileOpModule::BuildCreateFileLayout()
 		{
 			wxDirDialog* dirDia = new wxDirDialog(optDialogCreateFile, "Search for a Directory to place the new File", wxEmptyString, wxDD_DIR_MUST_EXIST);
 
-			dirDia->ShowModal();
+			int result = dirDia->ShowModal();
+			if (result == wxID_CANCEL)
+				return;
 
 			optDialogCreateFile->GetControl<wxTextCtrl>("inputFilePath")->SetValue(dirDia->GetPath());
 		}, ESHOW_DIR_DIA_CREATE);
@@ -94,38 +110,45 @@ void BasicFileOpModule::BuildDeleteLayout()
 
 	optDialogDeleteFile->AddStrechSpacer("base");
 
+	//filePath input box stuff
 	optDialogDeleteFile->AddSizer<wxBoxSizer>("filePathSizer", "base", wxSizerFlags().CentreHorizontal().Border(wxUP, 10), wxHORIZONTAL);
 	optDialogDeleteFile->AddControl<wxStaticText>("filePathText", "filePathSizer", wxSizerFlags(), wxID_ANY, "Directory: ");
 	optDialogDeleteFile->AddControl<wxTextCtrl>("inputFilePath", "filePathSizer", wxSizerFlags(), wxID_ANY, wxEmptyString, wxDefaultPosition, wxSize(200, wxDefaultSize.y));
 	optDialogDeleteFile->AddControl<wxButton>("showFileDiaBtn", "filePathSizer", wxSizerFlags(), ESHOW_DIR_DIA_DELETE, "Show Directory Dialog");
+
+	//Show DirDia
 	optDialogDeleteFile->Bind(wxEVT_BUTTON, [&](wxCommandEvent& evt)
 		{
 			wxDirDialog* dirDia = new wxDirDialog(optDialogDeleteFile, "Search for a Directory to place the new File", wxEmptyString, wxDD_DIR_MUST_EXIST);
-
-			dirDia->ShowModal();
+			
+			int result = dirDia->ShowModal();
+			if (result == wxID_CANCEL)
+				return;
 
 			optDialogDeleteFile->GetControl<wxTextCtrl>("inputFilePath")->SetValue(dirDia->GetPath());
-				
-			for (const auto& item : fs::directory_iterator(dirDia->GetPath().ToStdString()))
-			{
-				optDialogDeleteFile->GetControl<wxCheckListBox>("checkList")->Append(fs::path(item).filename().u8string());
-			}
+			ListElements(dirDia->GetPath());
 			
 		}, ESHOW_DIR_DIA_DELETE);
 	
+	//check List
 	optDialogDeleteFile->AddControl<wxCheckListBox>("checkList", "base", wxSizerFlags().CenterHorizontal().Border(wxUP, 10), ECHECKLIST_DELETE, wxDefaultPosition, wxSize(400, 200));
 	
+	//check btns
 	optDialogDeleteFile->AddSizer<wxBoxSizer>("checkButtonsSizer", "base", wxSizerFlags().CentreHorizontal().Border(wxUP, 10), wxHORIZONTAL);
-	optDialogDeleteFile->AddControl<wxButton>("confirmButton", "checkButtonsSizer", wxSizerFlags(), ECONFIRM_CREATE, "confirm");
-	optDialogDeleteFile->AddControl<wxButton>("cancelButton", "checkButtonsSizer", wxSizerFlags(), ECANCEL_CREATE, "cancel");
+	optDialogDeleteFile->AddControl<wxButton>("confirmButton", "checkButtonsSizer", wxSizerFlags(), ECONFIRM_DELETE, "confirm");
+	optDialogDeleteFile->AddControl<wxButton>("cancelButton", "checkButtonsSizer", wxSizerFlags(), ECANCEL_DELETE, "cancel");
 
-	//optDialogDeleteFile->Bind(wxEVT_BUTTON, &BasicFileOpModule::HandleCreateFile, this, ECONFIRM);
+	//Events
+	optDialogDeleteFile->Bind(wxEVT_BUTTON, &BasicFileOpModule::HandleDelete, this, ECONFIRM_DELETE);
+	optDialogDeleteFile->Bind(wxEVT_TEXT, [&](wxCommandEvent& evt) { ListElements(optDialogDeleteFile->GetControl<wxTextCtrl>("inputFilePath")->GetValue()); });
 
 	optDialogDeleteFile->Bind(wxEVT_BUTTON, [&](wxCommandEvent& evt)
 		{
 			optDialogDeleteFile->Close();
 
-		}, ECANCEL_CREATE);
+		}, ECANCEL_DELETE);
+
+
 
 	optDialogDeleteFile->AddStrechSpacer("base");
 	optDialogDeleteFile->RefreshLayout();
@@ -135,7 +158,72 @@ void BasicFileOpModule::OnPressCreateFile(wxCommandEvent& evt)
 {
 	optDialogCreateFile->ShowModal();
 }
-void BasicFileOpModule::OnPressDelteteFile(wxCommandEvent& evt)
+void BasicFileOpModule::OnPressDelete(wxCommandEvent& evt)
 {
 	optDialogDeleteFile->ShowModal();
+}
+
+void BasicFileOpModule::HandleDelete(wxCommandEvent& evt)
+{
+	wxCheckListBox* chkLst = optDialogDeleteFile->GetControl<wxCheckListBox>("checkList");
+
+	if (chkLst->IsEmpty())
+		return;
+
+	int res = wxMessageBox("ARE YOU SURE YOU WANT TO DELETE THOSE FILES/DIRECTORYS? THIS CANNOT BE UNDONE!", "WARNING!", wxOK | wxCANCEL);
+
+	if (res == wxOK)
+	{
+		std::vector<std::string> toDelete;
+
+		for (size_t i = 0; i < chkLst->GetCount(); i++)
+		{
+			if (chkLst->IsChecked(i))
+			{
+				toDelete.push_back(chkLst->GetString(i).ToStdString());
+			}
+		}
+
+		for (const auto& item : toDelete)
+		{
+			if (fs::is_directory(item))
+			{
+				fs::remove_all(item);
+			}
+			else if (fs::is_regular_file(item) || fs::is_symlink(item))
+			{
+				fs::remove(item);
+			}
+			else
+			{
+				//uhhh wtf is this
+			}
+		}
+		
+		for (const auto& item : toDelete)
+		{
+			int pos = chkLst->FindString(item);
+			chkLst->Delete(pos);
+		}
+	}
+}
+
+void BasicFileOpModule::ListElements(const wxString& path)
+{
+
+	wxCheckListBox* chkLst = optDialogDeleteFile->GetControl<wxCheckListBox>("checkList");
+
+	if (!fs::exists(path.ToStdString()))
+	{
+		chkLst->Clear();
+		return;
+	}
+		
+	//make sure we clear the last entries
+	chkLst->Clear();
+
+	for (const auto& item : fs::directory_iterator(path.ToStdString()))
+	{
+		chkLst->Append(fs::path(item).u8string());
+	}
 }

@@ -18,7 +18,10 @@ enum EButtonsID : uint8_t
 
 	//Delete File Opt Dialog
 	ESHOW_DIR_DIA_DELETE,
-	ECHECKLIST_DELETE
+	ECHECKLIST_DELETE,
+	ECONFIRM_DELETE,
+	ECANCEL_DELETE,
+	EON_CHANGE_DIR_PATH
 	
 };
 
@@ -29,15 +32,24 @@ class BasicFileOpModule : public BaseModule
 public:
 	BasicFileOpModule(wxWindow* window, wxPanel* panel);
 	~BasicFileOpModule() = default;
-	void HandleCreateFile(wxCommandEvent& evt);
+	
 
+	
+private:
 	void BuildAllLayouts();
 	void BuildCreateFileLayout();
 	void BuildDeleteLayout();
-private:
+
 
 	void OnPressCreateFile(wxCommandEvent& evt);
-	void OnPressDelteteFile(wxCommandEvent& evt);
+	void HandleCreateFile(wxCommandEvent& evt);
+
+	void OnPressDelete(wxCommandEvent& evt);
+	void HandleDelete(wxCommandEvent& evt);
+
+
+	void ListElements(const wxString& path);
+
 
 	DialogOptBuilder* optDialogCreateFile;
 	DialogOptBuilder* optDialogDeleteFile;
