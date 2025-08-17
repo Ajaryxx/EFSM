@@ -1,6 +1,9 @@
 #pragma once
 #include "modules/BaseModule.hpp"
 
+
+class DialogOptBuilder;
+
 enum EButtonsID : uint8_t
 {
 	ECREATE_BUTTON,
@@ -8,10 +11,15 @@ enum EButtonsID : uint8_t
 	EMOVE_BUTTON,
 	ECOPY_BUTTON,
 
-	//Create File Opt Dia
-	ESHOW_DIR_DIA,
-	ECONFIRM,
-	ECANCEL
+	//Create File Opt Dialog
+	ESHOW_DIR_DIA_CREATE,
+	ECONFIRM_CREATE,
+	ECANCEL_CREATE,
+
+	//Delete File Opt Dialog
+	ESHOW_DIR_DIA_DELETE,
+	ECHECKLIST_DELETE
+	
 };
 
 /*This class is for this following file operations
@@ -24,18 +32,14 @@ public:
 	void HandleCreateFile(wxCommandEvent& evt);
 
 	void BuildAllLayouts();
-
 	void BuildCreateFileLayout();
+	void BuildDeleteLayout();
 private:
 
-	//for file operations
-	wxButton* m_CreateButton;
-	wxButton* m_DeleteButton;
-	wxButton* m_MoveButton;
-	wxButton* m_CopyButton;
-
 	void OnPressCreateFile(wxCommandEvent& evt);
+	void OnPressDelteteFile(wxCommandEvent& evt);
 
-	class DialogOptBuilder* optDialogCreateFile;
+	DialogOptBuilder* optDialogCreateFile;
+	DialogOptBuilder* optDialogDeleteFile;
 
 };

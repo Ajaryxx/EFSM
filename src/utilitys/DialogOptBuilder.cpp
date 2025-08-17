@@ -2,7 +2,7 @@
 #include "utilitys/DialogOptBuilder.hpp"
 
 
-DialogOptBuilder::DialogOptBuilder(wxWindow* window, wxWindowID id, const wxString& title) : wxDialog(window, id, title) 
+DialogOptBuilder::DialogOptBuilder(wxWindow* window, wxWindowID id, const wxString& title, const wxPoint& pos, const wxSize& size) : wxDialog(window, id, title, pos, size)
 { 
 	//we always use a panel
 	mainPanel = new wxPanel(this);
