@@ -21,7 +21,9 @@ enum EButtonsID : uint8_t
 	ECHECKLIST_DELETE,
 	ECONFIRM_DELETE,
 	ECANCEL_DELETE,
-	EON_CHANGE_DIR_PATH
+	EON_CHANGE_DIR_PATH,
+	EDIR_PATH_INPUT,
+	ESEARCH_INPUT
 	
 };
 
@@ -40,6 +42,7 @@ private:
 	void BuildCreateFileLayout();
 	void BuildDeleteLayout();
 
+	void SetCopyDeleteCheckList();
 
 	void OnPressCreateFile(wxCommandEvent& evt);
 	void HandleCreateFile(wxCommandEvent& evt);
@@ -49,9 +52,12 @@ private:
 
 
 	void ListElements(const wxString& path);
-
+	void SearchList(wxString searchPrefix);
 
 	DialogOptBuilder* optDialogCreateFile;
 	DialogOptBuilder* optDialogDeleteFile;
+
+
+	wxArrayString m_copyDeleteCheckList;
 
 };
