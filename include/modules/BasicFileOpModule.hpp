@@ -27,6 +27,14 @@ enum EButtonsID : uint8_t
 	
 };
 
+
+struct CheckPath
+{
+	std::string path;
+	bool IsChecked;
+};
+
+
 /*This class is for this following file operations
  --> create, move, copy, delete*/
 class BasicFileOpModule : public BaseModule
@@ -50,7 +58,7 @@ private:
 	void OnPressDelete(wxCommandEvent& evt);
 	void HandleDelete(wxCommandEvent& evt);
 
-
+	void HandleCheckDeleteList(wxCommandEvent& evt);
 	void ListElements(const wxString& path);
 	void SearchList(wxString searchPrefix);
 
@@ -59,5 +67,5 @@ private:
 
 
 	wxArrayString m_copyDeleteCheckList;
-
+	std::vector<CheckPath> m_v_CheckPath;
 };
