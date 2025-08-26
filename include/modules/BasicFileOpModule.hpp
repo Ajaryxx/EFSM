@@ -62,6 +62,8 @@ private:
 	void ListElements(const wxString& path);
 	void SearchList(wxString searchPrefix);
 
+	void TransferCopyChkLstToMain();
+
 	DialogOptBuilder* optDialogCreateFile;
 	DialogOptBuilder* optDialogDeleteFile;
 
