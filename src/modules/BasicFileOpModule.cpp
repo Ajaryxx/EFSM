@@ -1,7 +1,7 @@
 #include "PCH.hpp"
 #include "modules/BasicFileOpModule.hpp"
 #include "utilitys/DialogOptBuilder.hpp"
-#include "utilitys/SearchBarUtility.hpp"
+#include "utilitys/FilePathSearchUtility.hpp"
 
 
 namespace fs = std::filesystem;
@@ -17,8 +17,6 @@ BasicFileOpModule::BasicFileOpModule(wxWindow* window, wxPanel* panel) : BaseMod
 
 	BindEvent("create_BTN", wxEVT_BUTTON, &BasicFileOpModule::OnPressCreateFile, this, ECREATE_BUTTON);
 	BindEvent("delete_BTN", wxEVT_BUTTON, &BasicFileOpModule::OnPressDelete, this, EDELETE_BUTTON);
-
-	
 
 	BuildAllLayouts();
 }
@@ -123,23 +121,6 @@ void BasicFileOpModule::BuildDeleteLayout()
 	optDialogDeleteFile->AddControl<wxStaticText>("searchBarText", "searchBarSizer", wxSizerFlags(), wxID_ANY, "Search for a File or Directory: ");
 	optDialogDeleteFile->AddControl<wxTextCtrl>("searchBar", "searchBarSizer", wxSizerFlags(), ESEARCH_INPUT, wxEmptyString, wxDefaultPosition, wxSize(150, wxDefaultSize.y));
 
-	//Show Directory Dialog
-	optDialogDeleteFile->Bind(wxEVT_BUTTON, [&](wxCommandEvent& evt)
-		{
-			wxDirDialog* dirDia = new wxDirDialog(optDialogDeleteFile, "Search for a Directory to place the new File", wxEmptyString, wxDD_DIR_MUST_EXIST);
-			
-			int result = dirDia->ShowModal();
-			if (result == wxID_CANCEL)
-				return;
-
-			optDialogDeleteFile->GetControl<wxTextCtrl>("inputFilePath")->SetValue(dirDia->GetPath());
-
-			ListElements(dirDia->GetPath());
-			SetCopyDeleteCheckList();
-			
-			
-		}, ESHOW_DIR_DIA_DELETE);
-	
 	//check List
 	optDialogDeleteFile->AddControl<wxCheckListBox>("checkList", "base", wxSizerFlags().CenterHorizontal().Border(wxUP, 10), ECHECKLIST_DELETE, wxDefaultPosition, wxSize(400, 200));
 	
@@ -149,37 +130,20 @@ void BasicFileOpModule::BuildDeleteLayout()
 	optDialogDeleteFile->AddControl<wxButton>("cancelButton", "checkButtonsSizer", wxSizerFlags(), ECANCEL_DELETE, "cancel");
 
 	//Events
+	//Show Directory Dialog
+	optDialogDeleteFile->Bind(wxEVT_BUTTON, &BasicFileOpModule::HandleShowDeleteDirectoryDialog, this, ESHOW_DIR_DIA_DELETE);
+	//When pressing confirm btn
 	optDialogDeleteFile->Bind(wxEVT_BUTTON, &BasicFileOpModule::HandleDelete, this, ECONFIRM_DELETE);
+	//If typed smthing in DirectoryPath
 	optDialogDeleteFile->Bind(wxEVT_TEXT, [&](wxCommandEvent& evt) { ListElements(optDialogDeleteFile->GetControl<wxTextCtrl>("inputFilePath")->GetValue()); }, EDIR_PATH_INPUT);
-	optDialogDeleteFile->Bind(wxEVT_CHECKLISTBOX, &BasicFileOpModule::HandleCheckDeleteList, this, ECHECKLIST_DELETE);
-	optDialogDeleteFile->Bind(wxEVT_TEXT, [&](wxCommandEvent& evt) 
-		{ 
-			wxTextCtrl* searchBar = optDialogDeleteFile->GetControl<wxTextCtrl>("searchBar");
-			
-			SearchList(searchBar->GetValue());
-
-		}, ESEARCH_INPUT);
-
-	optDialogDeleteFile->Bind(wxEVT_BUTTON, [&](wxCommandEvent& evt)
-		{
-			optDialogDeleteFile->Close();
-
-		}, ECANCEL_DELETE);
-
+	//If typed smthing in searchBar
+	optDialogDeleteFile->Bind(wxEVT_TEXT, &BasicFileOpModule::HandleSearchbarType, this, ESEARCH_INPUT);
+	//If checked a element in CheckBox
+	optDialogDeleteFile->Bind(wxEVT_CHECKLISTBOX, &BasicFileOpModule::HandleCheckElementDeleteList, this, ECHECKLIST_DELETE);
+	optDialogDeleteFile->Bind(wxEVT_BUTTON, [&](wxCommandEvent& evt){ optDialogDeleteFile->Close(); }, ECANCEL_DELETE);
 
 	optDialogDeleteFile->AddStrechSpacer("base");
 	optDialogDeleteFile->RefreshLayout();
-}
-
-void BasicFileOpModule::SetCopyDeleteCheckList()
-{
-	wxCheckListBox* chkLst = optDialogDeleteFile->GetControl<wxCheckListBox>("checkList");
-	m_v_CheckPath.clear();
-	for (size_t i = 0; i < chkLst->GetCount(); i++)
-	{
-		m_v_CheckPath.push_back(CheckPath{ chkLst->GetString(i), false });
-	}
-	
 }
 
 void BasicFileOpModule::OnPressCreateFile(wxCommandEvent& evt)
@@ -198,7 +162,7 @@ void BasicFileOpModule::HandleDelete(wxCommandEvent& evt)
 	bool AnyChecked = false;
 
 	optDialogDeleteFile->GetControl<wxTextCtrl>("searchBar")->SetValue("");
-	TransferCopyChkLstToMain();
+	
 
 	for (size_t i = 0; i < chkLst->GetCount(); i++)
 	{
@@ -210,9 +174,6 @@ void BasicFileOpModule::HandleDelete(wxCommandEvent& evt)
 	
 	if (chkLst->IsEmpty() || !AnyChecked)
 		return;
-
-	
-
 
 	int res = wxMessageBox("ARE YOU SURE YOU WANT TO DELETE THOSE FILES/DIRECTORYS? THIS CANNOT BE UNDONE!", "WARNING!", wxOK | wxCANCEL);
 
@@ -249,83 +210,121 @@ void BasicFileOpModule::HandleDelete(wxCommandEvent& evt)
 			int pos = chkLst->FindString(item);
 			chkLst->Delete(pos);
 		}
-		SetCopyDeleteCheckList();
+		m_v_pathCheck.clear();
+		ListElements(m_CurrentDeletePath);
 	}
 	
 }
 
-void BasicFileOpModule::HandleCheckDeleteList(wxCommandEvent& evt)
-{	
+void BasicFileOpModule::HandleCheckElementDeleteList(wxCommandEvent& evt)
+{
 	wxCheckListBox* chkLst = optDialogDeleteFile->GetControl<wxCheckListBox>("checkList");
-	std::string stringPath = evt.GetString().ToStdString();
-	for (auto& item : m_v_CheckPath)
+	
+	for (size_t i = 0; i < chkLst->GetCount(); i++)
 	{
-		if (item.path == stringPath)
+		wxString string = chkLst->GetString(i);
+
+		if (chkLst->IsChecked(chkLst->FindString(string)))
 		{
-			if (chkLst->IsChecked(chkLst->FindString(stringPath)))
-				item.IsChecked = true;
-
-			else
-				item.IsChecked = false;
-
-			return;
+			for (auto& item : m_v_pathCheck)
+			{
+				if (item.path == string)
+				{
+					item.checked = true;
+				}
+			}
 		}
+		else
+		{
+			for (auto& item : m_v_pathCheck)
+			{
+				if (item.path == string)
+				{
+					item.checked = false;
+				}
+			}
+		}
+	}
+
+}
+
+void BasicFileOpModule::HandleShowDeleteDirectoryDialog(wxCommandEvent& evt)
+{
+	wxDirDialog* dirDia = new wxDirDialog(optDialogDeleteFile, "Search for a Directory to place the delete Files or Directorys", wxEmptyString, wxDD_DIR_MUST_EXIST);
+
+	int result = dirDia->ShowModal();
+	if (result == wxID_CANCEL)
+		return;
+
+	m_CurrentDeletePath = dirDia->GetPath();
+
+	optDialogDeleteFile->GetControl<wxTextCtrl>("inputFilePath")->SetValue(m_CurrentDeletePath);
+	ListElements(m_CurrentDeletePath);
+}
+
+void BasicFileOpModule::HandleSearchbarType(wxCommandEvent& evt)
+{
+	wxCheckListBox* chkLst = optDialogDeleteFile->GetControl<wxCheckListBox>("checkList");
+	wxTextCtrl* searchBar = optDialogDeleteFile->GetControl<wxTextCtrl>("searchBar");
+	if (searchBar->GetValue().IsEmpty())
+	{
+		TransferToMain();
+		return;	
+	}
+
+	std::vector<wxString> searchedPaths = FilePathSearchUtilty::SearchDirPath(m_CurrentDeletePath, searchBar->GetValue());
+	if (searchedPaths.empty())
+		return;
+
+	chkLst->Clear();
+	for (const auto& string : searchedPaths)
+	{
+		int i = chkLst->Append(string);
+
+		for (const auto& item : m_v_pathCheck)
+		{
+			if (item.path == chkLst->GetString(i))
+			{
+				
+				chkLst->Check(i, item.checked);
+				
+			}
+		}
+		
 	}
 }
 
 void BasicFileOpModule::ListElements(const wxString& path)
 {
 	wxCheckListBox* chkLst = optDialogDeleteFile->GetControl<wxCheckListBox>("checkList");
-
-	if (!fs::exists(path.ToStdString()))
+	m_CurrentDeletePath = path;
+	if (!fs::exists(path.ToStdWstring()))
 	{
+		m_v_pathCheck.clear();
 		chkLst->Clear();
 		return;
 	}
 		
 	//make sure we clear the last entries
 	chkLst->Clear();
+	m_v_pathCheck.clear();
 
 	for (const auto& item : fs::directory_iterator(path.ToStdString()))
 	{
-		chkLst->Append(fs::path(item).u8string());
+		chkLst->Append(fs::path(item).wstring());
+		//make a copy so we can handle element checks easier
+		m_v_pathCheck.push_back(PathCheck{ item.path().wstring(), false});
 	}
 }
 
-void BasicFileOpModule::SearchList(wxString searchPrefix)
-{
-	wxCheckListBox* chkLst = optDialogDeleteFile->GetControl<wxCheckListBox>("checkList");
-
-	
-	
-	if (searchPrefix.IsEmpty())
-	{
-		TransferCopyChkLstToMain();
-		return;
-	}
-
-	auto searchedVec = SearchBarUtility::SearchPathVector(chkLst->GetStrings(), searchPrefix);
-	chkLst->Clear();
-	for (const auto& item : searchedVec)
-	{
-		fs::path itemPath = fs::path(item.ToStdString());
-		std::string fileName = wxString(itemPath.filename()).Lower();
-		
-		if (fileName.find(searchPrefix.Lower()) != std::string::npos)
-		{
-			int i = chkLst->Append(item);
-			//chkLst->Check(i, item);
-		}
-	}
-}
-
-void BasicFileOpModule::TransferCopyChkLstToMain()
+void BasicFileOpModule::TransferToMain()
 {
 	wxCheckListBox* chkLst = optDialogDeleteFile->GetControl<wxCheckListBox>("checkList");
 	chkLst->Clear();
-	for (const auto& item : m_v_CheckPath)
+	for (const auto& item : m_v_pathCheck)
 	{
 		int i = chkLst->Append(item.path);
-		chkLst->Check(i, item.IsChecked);
+
+		chkLst->Check(i, item.checked);
 	}
 }

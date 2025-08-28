@@ -27,13 +27,11 @@ enum EButtonsID : uint8_t
 	
 };
 
-
-struct CheckPath
+struct PathCheck
 {
-	std::string path;
-	bool IsChecked;
+	wxString path;
+	bool checked;
 };
-
 
 /*This class is for this following file operations
  --> create, move, copy, delete*/
@@ -50,23 +48,25 @@ private:
 	void BuildCreateFileLayout();
 	void BuildDeleteLayout();
 
-	void SetCopyDeleteCheckList();
-
 	void OnPressCreateFile(wxCommandEvent& evt);
 	void OnPressDelete(wxCommandEvent& evt);
 
+	//Create folder/file
 	void HandleCreateFile(wxCommandEvent& evt);
-	void HandleDelete(wxCommandEvent& evt);
-	void HandleCheckDeleteList(wxCommandEvent& evt);
-	
-	void ListElements(const wxString& path);
-	void SearchList(wxString searchPrefix);
 
-	//Transfer all Copy Chk-List to Main Chk-List
-	void TransferCopyChkLstToMain();
+	//delete folder/file
+	void HandleDelete(wxCommandEvent& evt);
+	void HandleCheckElementDeleteList(wxCommandEvent& evt);
+	void HandleShowDeleteDirectoryDialog(wxCommandEvent& evt);
+	void HandleSearchbarType(wxCommandEvent& evt);
+	void ListElements(const wxString& path);
+	void TransferToMain();
 
 	DialogOptBuilder* optDialogCreateFile;
 	DialogOptBuilder* optDialogDeleteFile;
 
-	std::vector<CheckPath> m_v_CheckPath;
+	wxString m_CurrentDeletePath = "";
+
+	std::vector<PathCheck> m_v_pathCheck;
+
 };
