@@ -1,6 +1,7 @@
 #include "PCH.hpp"
 #include "modules/BasicFileOpModule.hpp"
 #include "utilitys/DialogOptBuilder.hpp"
+#include "utilitys/SearchBarUtility.hpp"
 
 
 namespace fs = std::filesystem;
@@ -210,6 +211,9 @@ void BasicFileOpModule::HandleDelete(wxCommandEvent& evt)
 	if (chkLst->IsEmpty() || !AnyChecked)
 		return;
 
+	
+
+
 	int res = wxMessageBox("ARE YOU SURE YOU WANT TO DELETE THOSE FILES/DIRECTORYS? THIS CANNOT BE UNDONE!", "WARNING!", wxOK | wxCANCEL);
 
 	if (res == wxOK)
@@ -267,7 +271,6 @@ void BasicFileOpModule::HandleCheckDeleteList(wxCommandEvent& evt)
 			return;
 		}
 	}
-	
 }
 
 void BasicFileOpModule::ListElements(const wxString& path)
@@ -292,22 +295,26 @@ void BasicFileOpModule::ListElements(const wxString& path)
 void BasicFileOpModule::SearchList(wxString searchPrefix)
 {
 	wxCheckListBox* chkLst = optDialogDeleteFile->GetControl<wxCheckListBox>("checkList");
-	chkLst->Clear();
+
+	
+	
 	if (searchPrefix.IsEmpty())
 	{
 		TransferCopyChkLstToMain();
 		return;
 	}
 
-	for (const auto& item : m_v_CheckPath)
+	auto searchedVec = SearchBarUtility::SearchPathVector(chkLst->GetStrings(), searchPrefix);
+	chkLst->Clear();
+	for (const auto& item : searchedVec)
 	{
-		fs::path itemPath = fs::path(item.path);
-		std::string fileName = itemPath.filename().u8string();
-
-		if (fileName.find(searchPrefix) != std::string::npos)
+		fs::path itemPath = fs::path(item.ToStdString());
+		std::string fileName = wxString(itemPath.filename()).Lower();
+		
+		if (fileName.find(searchPrefix.Lower()) != std::string::npos)
 		{
-			int i = chkLst->Append(item.path);
-			chkLst->Check(i, item.IsChecked);
+			int i = chkLst->Append(item);
+			//chkLst->Check(i, item);
 		}
 	}
 }

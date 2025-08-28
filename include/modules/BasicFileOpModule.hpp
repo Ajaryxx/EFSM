@@ -53,21 +53,20 @@ private:
 	void SetCopyDeleteCheckList();
 
 	void OnPressCreateFile(wxCommandEvent& evt);
-	void HandleCreateFile(wxCommandEvent& evt);
-
 	void OnPressDelete(wxCommandEvent& evt);
-	void HandleDelete(wxCommandEvent& evt);
 
+	void HandleCreateFile(wxCommandEvent& evt);
+	void HandleDelete(wxCommandEvent& evt);
 	void HandleCheckDeleteList(wxCommandEvent& evt);
+	
 	void ListElements(const wxString& path);
 	void SearchList(wxString searchPrefix);
 
+	//Transfer all Copy Chk-List to Main Chk-List
 	void TransferCopyChkLstToMain();
 
 	DialogOptBuilder* optDialogCreateFile;
 	DialogOptBuilder* optDialogDeleteFile;
 
-
-	wxArrayString m_copyDeleteCheckList;
 	std::vector<CheckPath> m_v_CheckPath;
 };
