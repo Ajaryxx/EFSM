@@ -15,6 +15,7 @@ enum EButtonsID : uint8_t
 	ESHOW_DIR_DIA_CREATE,
 	ECONFIRM_CREATE,
 	ECANCEL_CREATE,
+	ERADIO_BOX,
 
 	//Delete File Opt Dialog
 	ESHOW_DIR_DIA_DELETE,

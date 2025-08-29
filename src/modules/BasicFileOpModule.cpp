@@ -23,8 +23,12 @@ BasicFileOpModule::BasicFileOpModule(wxWindow* window, wxPanel* panel) : BaseMod
 
 void BasicFileOpModule::HandleCreateFile(wxCommandEvent& evt)
 {
+
 	std::string filePath = optDialogCreateFile->GetControl<wxTextCtrl>("inputFilePath")->GetValue();
 	std::string fileName = optDialogCreateFile->GetControl<wxTextCtrl>("inputFileName")->GetValue();
+
+	
+
 	if (fs::exists(filePath) && !fileName.empty())
 	{
 		fs::path newFilePath = fs::path(filePath) / fs::path(fileName);
@@ -36,14 +40,38 @@ void BasicFileOpModule::HandleCreateFile(wxCommandEvent& evt)
 				return;
 			}
 		}
-		
-		std::ofstream file(newFilePath.u8string());
 
-		file.close();
+		wxRadioBox* rdbx = optDialogCreateFile->GetControl<wxRadioBox>("RadioBoxCreate");
+		if (rdbx->GetStringSelection() == "Folder")
+		{
+			try
+			{
+				fs::create_directory(newFilePath);
+				wxMessageBox("Folder created succesfuly :)", "Info", wxICON_INFORMATION);
+			}
+			catch (const std::system_error::exception& exc)
+			{
+				wxMessageBox(wxString("ERROR: ") + exc.what(), "ERROR", wxICON_ERROR);
+			}
+			
+		}
+		else if (rdbx->GetStringSelection() == "File")
+		{
+			std::ofstream file;
+			file.exceptions(std::ios_base::badbit | std::ios_base::failbit);
+			try
+			{
+				file.open(newFilePath.u8string());
 
-		wxMessageBox("File created succesfuly :)", "Info", wxICON_INFORMATION);
+				file.close();
 
-		optDialogCreateFile->Close();
+				wxMessageBox("File created succesfuly :)", "Info", wxICON_INFORMATION);
+			}
+			catch (const std::system_error::exception& exc)
+			{
+				wxMessageBox(wxString("ERROR: ") + exc.what(), "ERROR", wxICON_ERROR);
+			}
+		}
 	}
 	else
 	{
@@ -59,16 +87,21 @@ void BasicFileOpModule::BuildAllLayouts()
 
 void BasicFileOpModule::BuildCreateFileLayout()
 {
-	optDialogCreateFile = new DialogOptBuilder(GetApplicationWindow(), wxID_ANY, "Create a file");
+	optDialogCreateFile = new DialogOptBuilder(GetApplicationWindow(), wxID_ANY, "Create a File or a Directory");
 
 	optDialogCreateFile->SetBaseSizer<wxBoxSizer>(wxVERTICAL);
 
 	optDialogCreateFile->AddStrechSpacer("base");
 
+	optDialogCreateFile->AddSizer<wxBoxSizer>("radioBoxSizer", "base", wxSizerFlags().CentreHorizontal(), wxVERTICAL);
+	optDialogCreateFile->AddControl<wxRadioBox>("RadioBoxCreate", "radioBoxSizer", wxSizerFlags().CenterHorizontal(), ERADIO_BOX, 
+		"Choose a Option: ", wxDefaultPosition, wxDefaultSize, wxArrayString{"Folder", "File"});
+
 	optDialogCreateFile->AddSizer<wxBoxSizer>("filePathSizer", "base", wxSizerFlags().CentreHorizontal().Border(wxUP, 10), wxHORIZONTAL);
 	optDialogCreateFile->AddControl<wxStaticText>("filePathText", "filePathSizer", wxSizerFlags(), wxID_ANY, "Directory: ");
 	optDialogCreateFile->AddControl<wxTextCtrl>("inputFilePath", "filePathSizer", wxSizerFlags(), wxID_ANY, wxEmptyString, wxDefaultPosition, wxSize(200, wxDefaultSize.y));
 	optDialogCreateFile->AddControl<wxButton>("showFileDiaBtn", "filePathSizer", wxSizerFlags(), ESHOW_DIR_DIA_CREATE, "Show Directory Dialog");
+	
 	optDialogCreateFile->Bind(wxEVT_BUTTON, [&](wxCommandEvent& evt)
 		{
 			wxDirDialog* dirDia = new wxDirDialog(optDialogCreateFile, "Search for a Directory to place the new File", wxEmptyString, wxDD_DIR_MUST_EXIST);
@@ -82,7 +115,7 @@ void BasicFileOpModule::BuildCreateFileLayout()
 
 
 	optDialogCreateFile->AddSizer<wxBoxSizer>("fileNameSizer", "base", wxSizerFlags().CentreHorizontal().Border(wxUP, 10), wxHORIZONTAL);
-	optDialogCreateFile->AddControl<wxStaticText>("fileNameText", "fileNameSizer", wxSizerFlags(), wxID_ANY, "File Name: ");
+	optDialogCreateFile->AddControl<wxStaticText>("fileNameText", "fileNameSizer", wxSizerFlags(), wxID_ANY, "Name: ");
 	optDialogCreateFile->AddControl<wxTextCtrl>("inputFileName", "fileNameSizer", wxSizerFlags(), wxID_ANY);
 
 	optDialogCreateFile->AddSizer<wxBoxSizer>("checkButtonsSizer", "base", wxSizerFlags().CentreHorizontal().Border(wxUP, 10), wxHORIZONTAL);
@@ -231,7 +264,6 @@ void BasicFileOpModule::HandleCheckElementDeleteList(wxCommandEvent& evt)
 				if (item.path == string)
 				{
 					item.checked = true;
-					
 				}
 			}
 		}
@@ -242,12 +274,10 @@ void BasicFileOpModule::HandleCheckElementDeleteList(wxCommandEvent& evt)
 				if (item.path == string)
 				{
 					item.checked = false;
-					
 				}
 			}
 		}
 	}
-
 }
 
 void BasicFileOpModule::HandleShowDeleteDirectoryDialog(wxCommandEvent& evt)
