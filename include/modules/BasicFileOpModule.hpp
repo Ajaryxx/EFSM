@@ -58,8 +58,11 @@ private:
 	void HandleDelete(wxCommandEvent& evt);
 	void HandleCheckElementDeleteList(wxCommandEvent& evt);
 	void HandleShowDeleteDirectoryDialog(wxCommandEvent& evt);
+	//When typing smthing in SearchBar
 	void HandleSearchbarType(wxCommandEvent& evt);
+	//List all Folders/Files to the checkList
 	void ListElements(const wxString& path);
+	//Transfering Copy Elements to MainCheckList
 	void TransferToMain();
 
 	DialogOptBuilder* optDialogCreateFile;

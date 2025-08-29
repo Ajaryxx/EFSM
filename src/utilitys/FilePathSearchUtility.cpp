@@ -3,25 +3,20 @@
 
 namespace fs = std::filesystem;
 
-std::vector<wxString> FilePathSearchUtilty::SearchDirPath(const wxString& directoryPath, const wxString& searchPrefix, bool IgnoreUpperLower)
+std::vector<wxString> FilePathSearchUtilty::SearchDirPath(const std::vector<wxString>& elements, const wxString& searchPrefix, bool IgnoreUpperLower)
 {
 	std::vector<wxString> searchPathsVec;
 
-	if (!fs::exists(directoryPath.ToStdWstring()))
-	{
-		wxMessageBox("Path doesnt exist!", "WARNING");
-		return std::vector<wxString>();
-	}
-		
+	
 	if (IgnoreUpperLower)
 	{
-		for (const auto& item : fs::directory_iterator(directoryPath.ToStdWstring()))
+		for (const auto& item : elements)
 		{
-			wxString fileName = fs::path(item).filename().wstring();
+			wxString fileName = fs::path(item.ToStdWstring()).filename().wstring();
 
 			if (fileName.Lower().find(searchPrefix.Lower()) != wxString::npos)
 			{
-				searchPathsVec.push_back(item.path().wstring());
+				searchPathsVec.push_back(item);
 			}
 		}
 	}
