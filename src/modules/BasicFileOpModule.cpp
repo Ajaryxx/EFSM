@@ -224,18 +224,26 @@ void BasicFileOpModule::HandleDelete(wxCommandEvent& evt)
 
 		for (const auto& item : toDelete)
 		{
-			if (fs::is_directory(item))
+			try
 			{
-				fs::remove_all(item);
+				if (fs::is_directory(item))
+				{
+					fs::remove_all(item);
+				}
+				else if (fs::is_regular_file(item) || fs::is_symlink(item))
+				{
+					fs::remove(item);
+				}
+				else
+				{
+					//uhhh wtf is this
+				}
 			}
-			else if (fs::is_regular_file(item) || fs::is_symlink(item))
+			catch (const std::system_error::exception& exc)
 			{
-				fs::remove(item);
+				wxMessageBox(wxString("Couldnt delete: ") + item + wxString(" because: ") + exc.what(), "ERROR", wxICON_ERROR);
 			}
-			else
-			{
-				//uhhh wtf is this
-			}
+			
 		}
 		//Clear the checked items in the list
 		for (const auto& item : toDelete)
