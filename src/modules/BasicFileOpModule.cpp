@@ -6,22 +6,20 @@
 
 namespace fs = std::filesystem;
 
-BasicFileOpModule::BasicFileOpModule(wxWindow* window, wxPanel* panel) : BaseModule(wxString("Basic File operations"), wxVERTICAL, window)
-{
-	//SetModuleSizer<wxGridSizer>(2, 2, 2, 2);
-	SetModuleSizer<wxBoxSizer>(wxHORIZONTAL);
+BasicFileOpModule::BasicFileOpModule(wxWindow* window) : BaseModule(wxString("Basic File operations"), wxVERTICAL, window)
+{	
 
-	AddControl<wxButton>("create_BTN", wxSizerFlags(), panel, ECREATE_BUTTON, "Create");
-	AddControl<wxButton>("delete_BTN",wxSizerFlags(), panel, EDELETE_BUTTON, "Delete");
-	AddControl<wxButton>("copyOption_BTN", wxSizerFlags().Align(wxHORIZONTAL), panel, ECOPY_OPTION_BUTTON, "Copy Option");
-
+	AddControl<wxButton>("create_BTN", "base", wxSizerFlags(), ECREATE_BUTTON, "Create");
+	AddControl<wxButton>("delete_BTN", "base", wxSizerFlags(), EDELETE_BUTTON, "Delete");
+	AddControl<wxButton>("copyOption_BTN", "base", wxSizerFlags().Align(wxHORIZONTAL), ECOPY_OPTION_BUTTON, "Copy Option");
+	
+	/*
 	BuildAllLayouts();
 
-
-	BindEvent("create_BTN", wxEVT_BUTTON, [&](wxCommandEvent) {m_optDialogCreateFile->ShowModal(); }, ECREATE_BUTTON);
-	BindEvent("delete_BTN", wxEVT_BUTTON, [&](wxCommandEvent) {m_optDialogDeleteFile->ShowModal(); }, EDELETE_BUTTON);
-	BindEvent("copyOption_BTN", wxEVT_BUTTON, [&](wxCommandEvent) {m_optDialogMoveCopyFile->ShowModal(); }, ECOPY_OPTION_BUTTON);
-	
+	GetControl<wxButton>("create_BTN")->Bind(wxEVT_BUTTON, [&](wxCommandEvent) {m_optDialogCreateFile->ShowModal(); }, ECREATE_BUTTON);
+	GetControl<wxButton>("create_BTN")->Bind( wxEVT_BUTTON, [&](wxCommandEvent) {m_optDialogDeleteFile->ShowModal(); }, EDELETE_BUTTON);
+	GetControl<wxButton>("create_BTN")->Bind(wxEVT_BUTTON, [&](wxCommandEvent) {m_optDialogMoveCopyFile->ShowModal(); }, ECOPY_OPTION_BUTTON);
+	*/
 }
 
 void BasicFileOpModule::BuildAllLayouts()

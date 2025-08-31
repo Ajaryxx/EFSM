@@ -25,6 +25,8 @@ public:
 
 	template<typename T>
 	T* GetControl(const wxString& key) const;
+	template<typename T>
+	T* GetSizer(const wxString& key) const;
 
 	//template<typename T, typename VAL>
 	//void SetValue(const wxString& key, const VAL& value);
@@ -127,6 +129,24 @@ inline T* LayoutBuilderUtility::GetControl(const wxString& key) const
 	{
 		assert(false && "Key does not exists");
 	}
+}
+
+template<typename T>
+inline T* LayoutBuilderUtility::GetSizer(const wxString& key) const
+{
+	auto it = m_um_Sizers.find(key);
+	if (it != m_um_Sizers.end())
+	{
+		if (auto control = dynamic_cast<T*>(it->second))
+		{
+			return control;
+		}
+	}
+	else
+	{
+		assert(false && "Key does not exists");
+	}
+	return nullptr;
 }
 
 //template<typename T, typename VAL>

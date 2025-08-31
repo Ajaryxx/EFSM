@@ -8,6 +8,9 @@ BaseModule::BaseModule(const wxString& moduleName, int orient, wxWindow* window)
 	this->m_StaticBoxSizer = new wxStaticBoxSizer(orient, window, m_ModuleName);
 	this->m_Window = window;
 	this->m_Sizer = nullptr;
+
+	InitLayoutParent(window, wxID_ANY);
+	SetBaseSizer<wxStaticBoxSizer>(wxHORIZONTAL, window, "Basic File Operations");
 }
 
 wxWindow* BaseModule::GetApplicationWindow() const
@@ -16,6 +19,6 @@ wxWindow* BaseModule::GetApplicationWindow() const
 }
 wxStaticBoxSizer* BaseModule::GetLayout() const
 {
-	assert(m_Sizer && "Please set a sizer for this Module");
-	return m_StaticBoxSizer;
+	//assert(m_Sizer && "Please set a sizer for this Module");
+	return GetSizer<wxStaticBoxSizer>("base");
 }

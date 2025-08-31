@@ -38,7 +38,7 @@ struct PathCheck
 class BasicFileOpModule : public BaseModule
 {
 public:
-	BasicFileOpModule(wxWindow* window, wxPanel* panel);
+	BasicFileOpModule(wxWindow* panel);
 	~BasicFileOpModule() = default;
 
 	

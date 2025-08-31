@@ -5,6 +5,7 @@
 void LayoutBuilderUtility::InitLayoutParent(wxWindow* parent, wxWindowID id)
 {
 	mainPanel = new wxPanel(parent, id);
+	m_ParentWindow = parent;
 }
 
 void LayoutBuilderUtility::AddStrechSpacer(const wxString& key)
