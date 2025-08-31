@@ -14,7 +14,7 @@ wxWindow* BaseModule::GetApplicationWindow() const
 {
 	return m_Window;
 }
-wxStaticBoxSizer* BaseModule::GetStaticBoxSizer() const
+wxStaticBoxSizer* BaseModule::GetLayout() const
 {
 	assert(m_Sizer && "Please set a sizer for this Module");
 	return m_StaticBoxSizer;

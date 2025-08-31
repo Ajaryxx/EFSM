@@ -1,6 +1,6 @@
 #include "PCH.hpp"
 #include "modules/BasicFileOpModule.hpp"
-#include "utilitys/DialogOptBuilder.hpp"
+#include "utilitys/WindowToolDialog.hpp"
 #include "utilitys/FilePathSearchUtility.hpp"
 
 
@@ -8,26 +8,86 @@ namespace fs = std::filesystem;
 
 BasicFileOpModule::BasicFileOpModule(wxWindow* window, wxPanel* panel) : BaseModule(wxString("Basic File operations"), wxVERTICAL, window)
 {
-	SetModuleSizer<wxGridSizer>(2, 2, 4, 4);
+	//SetModuleSizer<wxGridSizer>(2, 2, 2, 2);
+	SetModuleSizer<wxBoxSizer>(wxHORIZONTAL);
 
-	AddControl<wxButton>("create_BTN", wxSizerFlags(), panel, ECREATE_BUTTON, "Create File");
-	AddControl<wxButton>("delete_BTN",wxSizerFlags(), panel, EDELETE_BUTTON, "Delete File");
-	AddControl<wxButton>("move_BTN", wxSizerFlags(), panel, EMOVE_BUTTON, "Move File");
-	AddControl<wxButton>("copy_BTN", wxSizerFlags(), panel, ECOPY_BUTTON, "Copy File");
-
-	BindEvent("create_BTN", wxEVT_BUTTON, &BasicFileOpModule::OnPressCreateFile, this, ECREATE_BUTTON);
-	BindEvent("delete_BTN", wxEVT_BUTTON, &BasicFileOpModule::OnPressDelete, this, EDELETE_BUTTON);
+	AddControl<wxButton>("create_BTN", wxSizerFlags(), panel, ECREATE_BUTTON, "Create");
+	AddControl<wxButton>("delete_BTN",wxSizerFlags(), panel, EDELETE_BUTTON, "Delete");
+	AddControl<wxButton>("copyOption_BTN", wxSizerFlags().Align(wxHORIZONTAL), panel, ECOPY_OPTION_BUTTON, "Copy Option");
 
 	BuildAllLayouts();
+
+
+	BindEvent("create_BTN", wxEVT_BUTTON, [&](wxCommandEvent) {m_optDialogCreateFile->ShowModal(); }, ECREATE_BUTTON);
+	BindEvent("delete_BTN", wxEVT_BUTTON, [&](wxCommandEvent) {m_optDialogDeleteFile->ShowModal(); }, EDELETE_BUTTON);
+	BindEvent("copyOption_BTN", wxEVT_BUTTON, [&](wxCommandEvent) {m_optDialogMoveCopyFile->ShowModal(); }, ECOPY_OPTION_BUTTON);
+	
+}
+
+void BasicFileOpModule::BuildAllLayouts()
+{
+	BuildCreateFileLayout();
+	BuildDeleteLayout();
+	BuildMoveCopyLayout();
+}
+
+void BasicFileOpModule::BuildCreateFileLayout()
+{
+	m_optDialogCreateFile = new WindowToolDialog(GetApplicationWindow(), wxID_ANY, "Create a File or a Directory");
+	
+	m_optDialogCreateFile->SetBaseSizer<wxBoxSizer>(wxVERTICAL);
+
+	m_optDialogCreateFile->AddStrechSpacer("base");
+
+	m_optDialogCreateFile->AddSizer<wxBoxSizer>("radioBoxSizer", "base", wxSizerFlags().CentreHorizontal(), wxVERTICAL);
+	m_optDialogCreateFile->AddControl<wxRadioBox>("RadioBoxCreate", "radioBoxSizer", wxSizerFlags().CenterHorizontal(), ERADIO_BOX, 
+		"Choose a Option: ", wxDefaultPosition, wxDefaultSize, wxArrayString{"Folder", "File"});
+
+	m_optDialogCreateFile->AddSizer<wxBoxSizer>("filePathSizer", "base", wxSizerFlags().CentreHorizontal().Border(wxUP, 10), wxHORIZONTAL);
+	m_optDialogCreateFile->AddControl<wxStaticText>("filePathText", "filePathSizer", wxSizerFlags(), wxID_ANY, "Directory: ");
+	m_optDialogCreateFile->AddControl<wxTextCtrl>("inputFilePath", "filePathSizer", wxSizerFlags(), wxID_ANY, wxEmptyString, wxDefaultPosition, wxSize(200, wxDefaultSize.y));
+	m_optDialogCreateFile->AddControl<wxButton>("showFileDiaBtn", "filePathSizer", wxSizerFlags(), ESHOW_DIR_DIA_CREATE, "Show Directory Dialog");
+	
+	m_optDialogCreateFile->Bind(wxEVT_BUTTON, [&](wxCommandEvent& evt)
+		{
+			wxDirDialog* dirDia = new wxDirDialog(m_optDialogCreateFile, "Search for a Directory to place the new File", wxEmptyString, wxDD_DIR_MUST_EXIST);
+
+			int result = dirDia->ShowModal();
+			if (result == wxID_CANCEL)
+				return;
+
+			m_optDialogCreateFile->GetControl<wxTextCtrl>("inputFilePath")->SetValue(dirDia->GetPath());
+		}, ESHOW_DIR_DIA_CREATE);
+
+
+	m_optDialogCreateFile->AddSizer<wxBoxSizer>("fileNameSizer", "base", wxSizerFlags().CentreHorizontal().Border(wxUP, 10), wxHORIZONTAL);
+	m_optDialogCreateFile->AddControl<wxStaticText>("fileNameText", "fileNameSizer", wxSizerFlags(), wxID_ANY, "Name: ");
+	m_optDialogCreateFile->AddControl<wxTextCtrl>("inputFileName", "fileNameSizer", wxSizerFlags(), wxID_ANY);
+
+	m_optDialogCreateFile->AddSizer<wxBoxSizer>("checkButtonsSizer", "base", wxSizerFlags().CentreHorizontal().Border(wxUP, 10), wxHORIZONTAL);
+	m_optDialogCreateFile->AddControl<wxButton>("confirmButton", "checkButtonsSizer", wxSizerFlags(), ECONFIRM_CREATE, "confirm");
+	m_optDialogCreateFile->AddControl<wxButton>("cancelButton", "checkButtonsSizer", wxSizerFlags(), ECANCEL_CREATE, "cancel");
+
+	m_optDialogCreateFile->Bind(wxEVT_BUTTON, &BasicFileOpModule::HandleCreateFile, this, ECONFIRM_CREATE);
+
+	m_optDialogCreateFile->Bind(wxEVT_BUTTON, [&](wxCommandEvent& evt)
+		{
+			m_optDialogCreateFile->Close();
+
+		}, ECANCEL_CREATE);
+
+	m_optDialogCreateFile->AddStrechSpacer("base");
+	m_optDialogCreateFile->RefreshLayout();
+	
 }
 
 void BasicFileOpModule::HandleCreateFile(wxCommandEvent& evt)
 {
 
-	std::string filePath = optDialogCreateFile->GetControl<wxTextCtrl>("inputFilePath")->GetValue();
-	std::string fileName = optDialogCreateFile->GetControl<wxTextCtrl>("inputFileName")->GetValue();
+	std::string filePath = m_optDialogCreateFile->GetControl<wxTextCtrl>("inputFilePath")->GetValue();
+	std::string fileName = m_optDialogCreateFile->GetControl<wxTextCtrl>("inputFileName")->GetValue();
 
-	
+
 
 	if (fs::exists(filePath) && !fileName.empty())
 	{
@@ -41,7 +101,7 @@ void BasicFileOpModule::HandleCreateFile(wxCommandEvent& evt)
 			}
 		}
 
-		wxRadioBox* rdbx = optDialogCreateFile->GetControl<wxRadioBox>("RadioBoxCreate");
+		wxRadioBox* rdbx = m_optDialogCreateFile->GetControl<wxRadioBox>("RadioBoxCreate");
 		if (rdbx->GetStringSelection() == "Folder")
 		{
 			try
@@ -53,7 +113,7 @@ void BasicFileOpModule::HandleCreateFile(wxCommandEvent& evt)
 			{
 				wxMessageBox(wxString("ERROR: ") + exc.what(), "ERROR", wxICON_ERROR);
 			}
-			
+
 		}
 		else if (rdbx->GetStringSelection() == "File")
 		{
@@ -79,122 +139,61 @@ void BasicFileOpModule::HandleCreateFile(wxCommandEvent& evt)
 	}
 }
 
-void BasicFileOpModule::BuildAllLayouts()
-{
-	BuildCreateFileLayout();
-	BuildDeleteLayout();
-}
-
-void BasicFileOpModule::BuildCreateFileLayout()
-{
-	optDialogCreateFile = new DialogOptBuilder(GetApplicationWindow(), wxID_ANY, "Create a File or a Directory");
-
-	optDialogCreateFile->SetBaseSizer<wxBoxSizer>(wxVERTICAL);
-
-	optDialogCreateFile->AddStrechSpacer("base");
-
-	optDialogCreateFile->AddSizer<wxBoxSizer>("radioBoxSizer", "base", wxSizerFlags().CentreHorizontal(), wxVERTICAL);
-	optDialogCreateFile->AddControl<wxRadioBox>("RadioBoxCreate", "radioBoxSizer", wxSizerFlags().CenterHorizontal(), ERADIO_BOX, 
-		"Choose a Option: ", wxDefaultPosition, wxDefaultSize, wxArrayString{"Folder", "File"});
-
-	optDialogCreateFile->AddSizer<wxBoxSizer>("filePathSizer", "base", wxSizerFlags().CentreHorizontal().Border(wxUP, 10), wxHORIZONTAL);
-	optDialogCreateFile->AddControl<wxStaticText>("filePathText", "filePathSizer", wxSizerFlags(), wxID_ANY, "Directory: ");
-	optDialogCreateFile->AddControl<wxTextCtrl>("inputFilePath", "filePathSizer", wxSizerFlags(), wxID_ANY, wxEmptyString, wxDefaultPosition, wxSize(200, wxDefaultSize.y));
-	optDialogCreateFile->AddControl<wxButton>("showFileDiaBtn", "filePathSizer", wxSizerFlags(), ESHOW_DIR_DIA_CREATE, "Show Directory Dialog");
-	
-	optDialogCreateFile->Bind(wxEVT_BUTTON, [&](wxCommandEvent& evt)
-		{
-			wxDirDialog* dirDia = new wxDirDialog(optDialogCreateFile, "Search for a Directory to place the new File", wxEmptyString, wxDD_DIR_MUST_EXIST);
-
-			int result = dirDia->ShowModal();
-			if (result == wxID_CANCEL)
-				return;
-
-			optDialogCreateFile->GetControl<wxTextCtrl>("inputFilePath")->SetValue(dirDia->GetPath());
-		}, ESHOW_DIR_DIA_CREATE);
-
-
-	optDialogCreateFile->AddSizer<wxBoxSizer>("fileNameSizer", "base", wxSizerFlags().CentreHorizontal().Border(wxUP, 10), wxHORIZONTAL);
-	optDialogCreateFile->AddControl<wxStaticText>("fileNameText", "fileNameSizer", wxSizerFlags(), wxID_ANY, "Name: ");
-	optDialogCreateFile->AddControl<wxTextCtrl>("inputFileName", "fileNameSizer", wxSizerFlags(), wxID_ANY);
-
-	optDialogCreateFile->AddSizer<wxBoxSizer>("checkButtonsSizer", "base", wxSizerFlags().CentreHorizontal().Border(wxUP, 10), wxHORIZONTAL);
-	optDialogCreateFile->AddControl<wxButton>("confirmButton", "checkButtonsSizer", wxSizerFlags(), ECONFIRM_CREATE, "confirm");
-	optDialogCreateFile->AddControl<wxButton>("cancelButton", "checkButtonsSizer", wxSizerFlags(), ECANCEL_CREATE, "cancel");
-
-	optDialogCreateFile->Bind(wxEVT_BUTTON, &BasicFileOpModule::HandleCreateFile, this, ECONFIRM_CREATE);
-
-	optDialogCreateFile->Bind(wxEVT_BUTTON, [&](wxCommandEvent& evt)
-		{
-			optDialogCreateFile->Close();
-
-		}, ECANCEL_CREATE);
-
-	optDialogCreateFile->AddStrechSpacer("base");
-	optDialogCreateFile->RefreshLayout();
-	
-}
-
 void BasicFileOpModule::BuildDeleteLayout()
 {
-	optDialogDeleteFile = new DialogOptBuilder(GetApplicationWindow(), wxID_ANY, "Delete Files or directorys", wxDefaultPosition, wxSize(450, 400));
+	m_optDialogDeleteFile = new WindowToolDialog(GetApplicationWindow(), wxID_ANY, "Delete Files or directorys", wxDefaultPosition, wxSize(450, 400));
+	
+	m_optDialogDeleteFile->SetBaseSizer<wxBoxSizer>(wxVERTICAL);
 
-	optDialogDeleteFile->SetBaseSizer<wxBoxSizer>(wxVERTICAL);
-
-	optDialogDeleteFile->AddStrechSpacer("base");
+	m_optDialogDeleteFile->AddStrechSpacer("base");
 
 	//filePath input box stuff
-	optDialogDeleteFile->AddSizer<wxBoxSizer>("filePathSizer", "base", wxSizerFlags().CentreHorizontal().Border(wxUP, 10), wxHORIZONTAL);
-	optDialogDeleteFile->AddControl<wxStaticText>("filePathText", "filePathSizer", wxSizerFlags(), wxID_ANY, "Directory: ");
-	optDialogDeleteFile->AddControl<wxTextCtrl>("inputFilePath", "filePathSizer", wxSizerFlags(), EDIR_PATH_INPUT, wxEmptyString, wxDefaultPosition, wxSize(200, wxDefaultSize.y));
-	optDialogDeleteFile->AddControl<wxButton>("showFileDiaBtn", "filePathSizer", wxSizerFlags(), ESHOW_DIR_DIA_DELETE, "Show Directory Dialog");
+	m_optDialogDeleteFile->AddSizer<wxBoxSizer>("filePathSizer", "base", wxSizerFlags().CentreHorizontal().Border(wxUP, 10), wxHORIZONTAL);
+	m_optDialogDeleteFile->AddControl<wxStaticText>("filePathText", "filePathSizer", wxSizerFlags(), wxID_ANY, "Directory: ");
+	m_optDialogDeleteFile->AddControl<wxTextCtrl>("inputFilePath", "filePathSizer", wxSizerFlags(), EDIR_PATH_INPUT, wxEmptyString, wxDefaultPosition, wxSize(200, wxDefaultSize.y));
+	m_optDialogDeleteFile->AddControl<wxButton>("showFileDiaBtn", "filePathSizer", wxSizerFlags(), ESHOW_DIR_DIA_DELETE, "Show Directory Dialog");
 
 	//searchbar input box stuff
-	optDialogDeleteFile->AddSizer<wxBoxSizer>("searchBarSizer", "base", wxSizerFlags().Border(wxUP | wxLEFT, 10), wxHORIZONTAL);
-	optDialogDeleteFile->AddControl<wxStaticText>("searchBarText", "searchBarSizer", wxSizerFlags(), wxID_ANY, "Search for a File or Directory: ");
-	optDialogDeleteFile->AddControl<wxTextCtrl>("searchBar", "searchBarSizer", wxSizerFlags(), ESEARCH_INPUT, wxEmptyString, wxDefaultPosition, wxSize(150, wxDefaultSize.y));
+	m_optDialogDeleteFile->AddSizer<wxBoxSizer>("searchBarSizer", "base", wxSizerFlags().Border(wxUP | wxLEFT, 10), wxHORIZONTAL);
+	m_optDialogDeleteFile->AddControl<wxStaticText>("searchBarText", "searchBarSizer", wxSizerFlags(), wxID_ANY, "Search for a File or Directory: ");
+	m_optDialogDeleteFile->AddControl<wxTextCtrl>("searchBar", "searchBarSizer", wxSizerFlags(), ESEARCH_INPUT, wxEmptyString, wxDefaultPosition, wxSize(150, wxDefaultSize.y));
 
 	//check List
-	optDialogDeleteFile->AddControl<wxCheckListBox>("checkList", "base", wxSizerFlags().CenterHorizontal().Border(wxUP, 10), ECHECKLIST_DELETE, wxDefaultPosition, wxSize(400, 200));
+	m_optDialogDeleteFile->AddControl<wxCheckListBox>("checkList", "base", wxSizerFlags().CenterHorizontal().Border(wxUP, 10), ECHECKLIST_DELETE, wxDefaultPosition, wxSize(400, 200));
 	
 	//check btns
-	optDialogDeleteFile->AddSizer<wxBoxSizer>("checkButtonsSizer", "base", wxSizerFlags().CentreHorizontal().Border(wxUP, 10), wxHORIZONTAL);
-	optDialogDeleteFile->AddControl<wxButton>("confirmButton", "checkButtonsSizer", wxSizerFlags(), ECONFIRM_DELETE, "confirm");
-	optDialogDeleteFile->AddControl<wxButton>("cancelButton", "checkButtonsSizer", wxSizerFlags(), ECANCEL_DELETE, "cancel");
+	m_optDialogDeleteFile->AddSizer<wxBoxSizer>("checkButtonsSizer", "base", wxSizerFlags().CentreHorizontal().Border(wxUP, 10), wxHORIZONTAL);
+	m_optDialogDeleteFile->AddControl<wxButton>("confirmButton", "checkButtonsSizer", wxSizerFlags(), ECONFIRM_DELETE, "confirm");
+	m_optDialogDeleteFile->AddControl<wxButton>("cancelButton", "checkButtonsSizer", wxSizerFlags(), ECANCEL_DELETE, "cancel");
 
 	//Events
 	//Show Directory Dialog
-	optDialogDeleteFile->Bind(wxEVT_BUTTON, &BasicFileOpModule::HandleShowDeleteDirectoryDialog, this, ESHOW_DIR_DIA_DELETE);
+	m_optDialogDeleteFile->Bind(wxEVT_BUTTON, &BasicFileOpModule::HandleShowDeleteDirectoryDialog, this, ESHOW_DIR_DIA_DELETE);
 	//When pressing confirm btn
-	optDialogDeleteFile->Bind(wxEVT_BUTTON, &BasicFileOpModule::HandleDelete, this, ECONFIRM_DELETE);
+	m_optDialogDeleteFile->Bind(wxEVT_BUTTON, &BasicFileOpModule::HandleDelete, this, ECONFIRM_DELETE);
 	//If typed smthing in DirectoryPath TextCtrl
-	optDialogDeleteFile->Bind(wxEVT_TEXT, [&](wxCommandEvent& evt) { ListElements(optDialogDeleteFile->GetControl<wxTextCtrl>("inputFilePath")->GetValue()); }, EDIR_PATH_INPUT);
+	m_optDialogDeleteFile->Bind(wxEVT_TEXT, [&](wxCommandEvent& evt) { ListElements(m_optDialogDeleteFile->GetControl<wxTextCtrl>("inputFilePath")->GetValue()); }, EDIR_PATH_INPUT);
 	//If typed smthing in searchBar
-	optDialogDeleteFile->Bind(wxEVT_TEXT, &BasicFileOpModule::HandleSearchbarType, this, ESEARCH_INPUT);
+	m_optDialogDeleteFile->Bind(wxEVT_TEXT, &BasicFileOpModule::HandleSearchbarType, this, ESEARCH_INPUT);
 	//If checked a element in CheckBox
-	optDialogDeleteFile->Bind(wxEVT_CHECKLISTBOX, &BasicFileOpModule::HandleCheckElementDeleteList, this, ECHECKLIST_DELETE);
-	optDialogDeleteFile->Bind(wxEVT_BUTTON, [&](wxCommandEvent& evt){ optDialogDeleteFile->Close(); }, ECANCEL_DELETE);
+	m_optDialogDeleteFile->Bind(wxEVT_CHECKLISTBOX, &BasicFileOpModule::HandleCheckElementDeleteList, this, ECHECKLIST_DELETE);
+	m_optDialogDeleteFile->Bind(wxEVT_BUTTON, [&](wxCommandEvent& evt){ m_optDialogDeleteFile->Close(); }, ECANCEL_DELETE);
 
-	optDialogDeleteFile->AddStrechSpacer("base");
-	optDialogDeleteFile->RefreshLayout();
+	m_optDialogDeleteFile->AddStrechSpacer("base");
+	m_optDialogDeleteFile->RefreshLayout();
 }
 
-void BasicFileOpModule::OnPressCreateFile(wxCommandEvent& evt)
+void BasicFileOpModule::BuildMoveCopyLayout()
 {
-	optDialogCreateFile->ShowModal();
-}
-
-void BasicFileOpModule::OnPressDelete(wxCommandEvent& evt)
-{
-	optDialogDeleteFile->ShowModal();
+	m_optDialogMoveCopyFile = new WindowToolDialog(GetApplicationWindow(), wxID_ANY, "Copy/Move File operation");
 }
 
 void BasicFileOpModule::HandleDelete(wxCommandEvent& evt)
 {
-	wxCheckListBox* chkLst = optDialogDeleteFile->GetControl<wxCheckListBox>("checkList");
+	wxCheckListBox* chkLst = m_optDialogDeleteFile->GetControl<wxCheckListBox>("checkList");
 	bool AnyChecked = false;
 
-	optDialogDeleteFile->GetControl<wxTextCtrl>("searchBar")->SetValue("");
+	m_optDialogDeleteFile->GetControl<wxTextCtrl>("searchBar")->SetValue("");
 	
 
 	for (size_t i = 0; i < chkLst->GetCount(); i++)
@@ -259,7 +258,7 @@ void BasicFileOpModule::HandleDelete(wxCommandEvent& evt)
 
 void BasicFileOpModule::HandleCheckElementDeleteList(wxCommandEvent& evt)
 {
-	wxCheckListBox* chkLst = optDialogDeleteFile->GetControl<wxCheckListBox>("checkList");
+	wxCheckListBox* chkLst = m_optDialogDeleteFile->GetControl<wxCheckListBox>("checkList");
 
 	for (size_t i = 0; i < chkLst->GetCount(); i++)
 	{
@@ -290,7 +289,7 @@ void BasicFileOpModule::HandleCheckElementDeleteList(wxCommandEvent& evt)
 
 void BasicFileOpModule::HandleShowDeleteDirectoryDialog(wxCommandEvent& evt)
 {
-	wxDirDialog* dirDia = new wxDirDialog(optDialogDeleteFile, "Search for a Directory to place the delete Files or Directorys", wxEmptyString, wxDD_DIR_MUST_EXIST);
+	wxDirDialog* dirDia = new wxDirDialog(m_optDialogDeleteFile, "Search for a Directory to place the delete Files or Directorys", wxEmptyString, wxDD_DIR_MUST_EXIST);
 
 	int result = dirDia->ShowModal();
 	if (result == wxID_CANCEL)
@@ -298,14 +297,14 @@ void BasicFileOpModule::HandleShowDeleteDirectoryDialog(wxCommandEvent& evt)
 
 	m_CurrentDeletePath = dirDia->GetPath();
 
-	optDialogDeleteFile->GetControl<wxTextCtrl>("inputFilePath")->SetValue(m_CurrentDeletePath);
+	m_optDialogDeleteFile->GetControl<wxTextCtrl>("inputFilePath")->SetValue(m_CurrentDeletePath);
 	ListElements(m_CurrentDeletePath);
 }
 
 void BasicFileOpModule::HandleSearchbarType(wxCommandEvent& evt)
 {
-	wxCheckListBox* chkLst = optDialogDeleteFile->GetControl<wxCheckListBox>("checkList");
-	wxTextCtrl* searchBar = optDialogDeleteFile->GetControl<wxTextCtrl>("searchBar");
+	wxCheckListBox* chkLst = m_optDialogDeleteFile->GetControl<wxCheckListBox>("checkList");
+	wxTextCtrl* searchBar = m_optDialogDeleteFile->GetControl<wxTextCtrl>("searchBar");
 
 	if (searchBar->GetValue().IsEmpty())
 	{
@@ -342,7 +341,7 @@ void BasicFileOpModule::HandleSearchbarType(wxCommandEvent& evt)
 
 void BasicFileOpModule::ListElements(const wxString& path)
 {
-	wxCheckListBox* chkLst = optDialogDeleteFile->GetControl<wxCheckListBox>("checkList");
+	wxCheckListBox* chkLst = m_optDialogDeleteFile->GetControl<wxCheckListBox>("checkList");
 	m_CurrentDeletePath = path;
 	
 	//make sure we clear the last entries
@@ -362,7 +361,7 @@ void BasicFileOpModule::ListElements(const wxString& path)
 
 void BasicFileOpModule::TransferToMain()
 {
-	wxCheckListBox* chkLst = optDialogDeleteFile->GetControl<wxCheckListBox>("checkList");
+	wxCheckListBox* chkLst = m_optDialogDeleteFile->GetControl<wxCheckListBox>("checkList");
 	chkLst->Clear();
 	for (const auto& item : m_v_pathCheck)
 	{

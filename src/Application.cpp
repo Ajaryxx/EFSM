@@ -23,5 +23,5 @@ Application::~Application()
 void Application::AddModule(std::shared_ptr<BaseModule> module)
 {
 	m_v_modules.push_back(module);
-	m_FlexGridSizer->Add(module->GetStaticBoxSizer());
+	m_FlexGridSizer->Add(module->GetLayout());
 }

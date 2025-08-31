@@ -1,10 +1,14 @@
 #pragma once
 
-class DialogOptBuilder : public wxDialog
+
+class LayoutBuilderUtility
 {
 public:
-	DialogOptBuilder(wxWindow* window, wxWindowID id, const wxString& title, const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxDefaultSize);
-	~DialogOptBuilder() = default;
+	LayoutBuilderUtility() : mainPanel(nullptr), m_ParentWindow(nullptr) {}
+	~LayoutBuilderUtility() = default;
+
+	//Please call this function only once
+	void InitLayoutParent(wxWindow* parent, wxWindowID id);
 
 	//Set base sizer for panel. Please call this function only once(the key name is set to "base")
 	template<typename T, typename... Args>
@@ -29,19 +33,24 @@ public:
 	//RET GetValue(const wxString& key) const;
 
 	void AddStrechSpacer(const wxString& key);
-	void AddSpacer(const wxString& key, int size);
+	void AddSpacer(const wxString& attach, int size);
 
 	//its not neccesery to call this function
 	void RefreshLayout();
+
+	wxWindow* GetParentWindow() const;
+	void SetParentWindow(wxWindow* window);
 private:
 
 	wxPanel* mainPanel;
 	std::unordered_map<wxString, wxSizer*> m_um_Sizers;
 	std::unordered_map<wxString, wxControl*> m_um_Controls;
+
+	wxWindow* m_ParentWindow;
 };
 
 template<typename T, typename ...Args>
-inline void DialogOptBuilder::SetBaseSizer(Args&& ...args)
+inline void LayoutBuilderUtility::SetBaseSizer(Args&& ...args)
 {
 	static_assert(std::is_base_of<wxSizer, T>::value, "T must be a wxSizer");
 
@@ -53,7 +62,7 @@ inline void DialogOptBuilder::SetBaseSizer(Args&& ...args)
 }
 
 template<typename T, typename ...Args>
-inline void DialogOptBuilder::AddSizer(const wxString& key, const wxString& sizerKey, const wxSizerFlags& flags, Args && ...args)
+inline void LayoutBuilderUtility::AddSizer(const wxString& key, const wxString& sizerKey, const wxSizerFlags& flags, Args && ...args)
 {
 	static_assert(std::is_base_of<wxSizer, T>::value, "T must be a wxSizer");
 
@@ -79,7 +88,7 @@ inline void DialogOptBuilder::AddSizer(const wxString& key, const wxString& size
 }
 
 template<typename T, typename ...Args>
-inline void DialogOptBuilder::AddControl(const wxString& key, const wxString& sizerKey, const wxSizerFlags& flags, Args && ...args)
+inline void LayoutBuilderUtility::AddControl(const wxString& key, const wxString& sizerKey, const wxSizerFlags& flags, Args && ...args)
 {
 	static_assert(std::is_base_of<wxControl, T>::value, "T must be a wxControl");
 
@@ -104,7 +113,7 @@ inline void DialogOptBuilder::AddControl(const wxString& key, const wxString& si
 }
 
 template<typename T>
-inline T* DialogOptBuilder::GetControl(const wxString& key) const
+inline T* LayoutBuilderUtility::GetControl(const wxString& key) const
 {
 	auto it = m_um_Controls.find(key);
 	if (it != m_um_Controls.end())
@@ -113,7 +122,6 @@ inline T* DialogOptBuilder::GetControl(const wxString& key) const
 		{
 			return control;
 		}
-	
 	}
 	else
 	{

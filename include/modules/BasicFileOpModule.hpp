@@ -1,15 +1,14 @@
 #pragma once
 #include "modules/BaseModule.hpp"
 
-
-class DialogOptBuilder;
+class WindowToolDialog;
 
 enum EButtonsID : uint8_t
 {
 	ECREATE_BUTTON,
 	EDELETE_BUTTON,
-	EMOVE_BUTTON,
-	ECOPY_BUTTON,
+	ECOPY_OPTION_BUTTON,
+	
 
 	//Create File Opt Dialog
 	ESHOW_DIR_DIA_CREATE,
@@ -41,21 +40,19 @@ class BasicFileOpModule : public BaseModule
 public:
 	BasicFileOpModule(wxWindow* window, wxPanel* panel);
 	~BasicFileOpModule() = default;
-	
 
 	
 private:
 	void BuildAllLayouts();
+	//Build Option Dialogs
 	void BuildCreateFileLayout();
 	void BuildDeleteLayout();
-
-	void OnPressCreateFile(wxCommandEvent& evt);
-	void OnPressDelete(wxCommandEvent& evt);
-
-	//Create folder/file
+	void BuildMoveCopyLayout();
+	
+	/*---------------Create Folder/File------------------*/
 	void HandleCreateFile(wxCommandEvent& evt);
 
-	//delete folder/file
+	/*-------------------Delete Folder/File---------------------*/
 	void HandleDelete(wxCommandEvent& evt);
 	void HandleCheckElementDeleteList(wxCommandEvent& evt);
 	void HandleShowDeleteDirectoryDialog(wxCommandEvent& evt);
@@ -66,11 +63,13 @@ private:
 	//Transfering Copy Elements to MainCheckList
 	void TransferToMain();
 
-	DialogOptBuilder* optDialogCreateFile;
-	DialogOptBuilder* optDialogDeleteFile;
+	/*---------------------------------------------------*/
+
+	WindowToolDialog* m_optDialogCreateFile;
+	WindowToolDialog* m_optDialogDeleteFile;
+	WindowToolDialog* m_optDialogMoveCopyFile;
 
 	wxString m_CurrentDeletePath = "";
 
 	std::vector<PathCheck> m_v_pathCheck;
-
 };

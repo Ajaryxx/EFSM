@@ -5,8 +5,7 @@ class BaseModule
 public:
 	BaseModule(const wxString& moduleName, int orient, wxWindow* window);
 
-	wxStaticBoxSizer* GetStaticBoxSizer() const;
-
+	wxStaticBoxSizer* GetLayout() const;
 
 protected:
 	wxWindow* GetApplicationWindow() const;
@@ -23,6 +22,14 @@ protected:
 			const EventTag& eventType,
 			void (Class::* method)(EventArg&),
 			EventHandler* handler,
+			int winid = wxID_ANY,
+			int lastId = wxID_ANY,
+			wxObject* userData = nullptr);
+
+		template <typename EventTag, typename Functor>
+		void BindEvent(const wxString& key,
+			const EventTag& eventType,
+			const Functor& functor,
 			int winid = wxID_ANY,
 			int lastId = wxID_ANY,
 			wxObject* userData = nullptr);
@@ -76,5 +83,20 @@ inline void BaseModule::BindEvent(const wxString& key, const EventTag& eventType
 	else
 	{
 		it->second->Bind(eventType, method, handler, winid, lastId, userData);
+	}
+}
+
+template<typename EventTag, typename Functor>
+inline void BaseModule::BindEvent(const wxString& key, const EventTag& eventType, const Functor& functor, int winid, int lastId, wxObject* userData)
+{
+	auto it = m_um_controls.find(key);
+
+	if (it == m_um_controls.end())
+	{
+		assert(false && "Key doesnt exists");
+	}
+	else
+	{
+		it->second->Bind(eventType, functor, winid, lastId, userData);
 	}
 }
